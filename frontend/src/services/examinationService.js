@@ -39,6 +39,26 @@ export const getAvailableExaminations = async () => {
   return response.data;
 };
 
+export const startOrResumeAttempt = async (id) => {
+  const response = await api.get(`/examinations/${id}/start`);
+  return response.data;
+};
+
+export const getStudentAttempt = async (id) => {
+  const response = await api.get(`/examinations/${id}/attempt`);
+  return response.data;
+};
+
+export const saveAttemptProgress = async (id, answers) => {
+  const response = await api.patch(`/examinations/${id}/progress`, { answers });
+  return response.data;
+};
+
+export const submitAttempt = async (id, answers = []) => {
+  const response = await api.post(`/examinations/${id}/submit`, { answers });
+  return response.data;
+};
+
 export default {
   createExamination,
   getMyExaminations,
@@ -47,5 +67,9 @@ export default {
   deleteExamination,
   publishExamination,
   getAvailableExaminations,
+  startOrResumeAttempt,
+  getStudentAttempt,
+  saveAttemptProgress,
+  submitAttempt,
 };
 

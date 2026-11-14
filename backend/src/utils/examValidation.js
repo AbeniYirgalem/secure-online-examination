@@ -1,6 +1,13 @@
 import { z } from 'zod';
 
 /**
+ * Helper to validate MongoDB ObjectId format.
+ */
+export const isValidObjectId = (id) => {
+  return /^[0-9a-fA-F]{24}$/.test(id);
+};
+
+/**
  * Question Zod schema enforcing exactly 4 options and valid correct answer.
  */
 export const questionInputSchema = z
@@ -68,9 +75,24 @@ export const examinationInputSchema = z
   );
 
 /**
- * Helper to validate MongoDB ObjectId format.
+ * Schema for student examination answers submission and progress saving.
  */
-export const isValidObjectId = (id) => {
-  return /^[0-9a-fA-F]{24}$/.test(id);
-};
+export const submitAnswersSchema = z.object({
+  answers: z
+    .array(
+      z.object({
+        questionId: z
+          .string({ required_error: 'Question ID is required' })
+          .trim()
+          .refine(isValidObjectId, { message: 'Invalid question ID format' }),
+        selectedAnswer: z
+          .string({ required_error: 'Selected answer is required' })
+          .trim()
+          .min(1, 'Selected answer cannot be empty'),
+      })
+    )
+    .optional()
+    .default([]),
+});
+
 

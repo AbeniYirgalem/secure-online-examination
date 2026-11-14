@@ -14,6 +14,7 @@ import ExaminationsPage from '../pages/instructor/ExaminationsPage';
 import ExamEditorPage from '../pages/instructor/ExamEditorPage';
 import ExamDetailsPage from '../pages/instructor/ExamDetailsPage';
 import AvailableExamsPage from '../pages/student/AvailableExamsPage';
+import ExamTakingPage from '../pages/student/ExamTakingPage';
 
 export default function AppRoutes() {
   return (
@@ -41,6 +42,16 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <AvailableExamsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student Active Examination Taking Route */}
+        <Route
+          path="/examinations/:id/take"
+          element={
+            <ProtectedRoute allowedRoles={['STUDENT']}>
+              <ExamTakingPage />
             </ProtectedRoute>
           }
         />

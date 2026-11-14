@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   BookOpen,
   Clock,
@@ -119,9 +120,11 @@ export default function AvailableExamsPage() {
                   <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-600" />
                   <span>Integrity Monitored</span>
                 </div>
-                <Button size="sm" variant="primary" disabled title="Student test-taking engine activates in Step 8">
-                  Begin Exam
-                </Button>
+                <Link to={`/examinations/${exam._id}/take`}>
+                  <Button size="sm" variant="primary" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                    Begin Exam
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}
