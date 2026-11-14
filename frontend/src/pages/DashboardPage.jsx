@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   User,
   ShieldCheck,
@@ -9,6 +9,8 @@ import {
   Calendar,
   Clock,
   BookOpen,
+  ArrowRight,
+  Plus,
 } from 'lucide-react';
 import useAuth from '../hooks/useAuth';
 import PageHeading from '../components/ui/PageHeading';
@@ -120,10 +122,84 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="text-slate-500 leading-relaxed text-[11px] pt-2">
-              Next Phase: Examination scheduling, question bank loading, and automated proctoring modules will attach to this authenticated context.
+              Role permissions enforced server-side. Client cannot manipulate authorization boundaries.
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Role-Based Quick Actions */}
+      <div className="space-y-4">
+        <h3 className="text-base font-bold text-slate-900">Workspace Actions</h3>
+
+        {user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link to="/examinations">
+              <Card className="p-5 hover:border-blue-300 transition group cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">
+                        Manage Examinations
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        View, edit, author questions, and publish assessments
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                </div>
+              </Card>
+            </Link>
+
+            <Link to="/examinations/create">
+              <Card className="p-5 hover:border-blue-300 transition group cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-600 transition">
+                        Create New Assessment
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Launch new examination draft with custom question bank
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                </div>
+              </Card>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link to="/examinations/available">
+              <Card className="p-5 hover:border-emerald-300 transition group cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition">
+                        Available Examinations
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Browse scheduled, active assessments open for testing
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
+                </div>
+              </Card>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

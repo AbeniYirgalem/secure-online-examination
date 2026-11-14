@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { ShieldCheck, Menu, X, Lock, LogIn, LogOut, UserPlus, User } from 'lucide-react';
+import { ShieldCheck, Menu, X, LogIn, LogOut, UserPlus, BookOpen, Calendar } from 'lucide-react';
 import Button from '../ui/Button';
-import Badge from '../components/../ui/Badge';
 import useAuth from '../../hooks/useAuth';
 
 export default function Navbar() {
@@ -56,28 +55,59 @@ export default function Navbar() {
               </NavLink>
             ))}
 
-            <div className="h-4 w-px bg-slate-200" aria-hidden="true" />
-
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
+            {isAuthenticated && (
+              <>
                 <NavLink
                   to="/dashboard"
                   className={({ isActive }) =>
-                    `text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition ${
-                      isActive
-                        ? 'bg-blue-50 border-blue-200 text-blue-700'
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    `transition-colors ${
+                      isActive ? 'text-blue-600 font-semibold' : 'text-slate-600 hover:text-slate-900'
                     }`
                   }
                 >
                   Dashboard
                 </NavLink>
 
+                {user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' ? (
+                  <NavLink
+                    to="/examinations"
+                    className={({ isActive }) =>
+                      `flex items-center space-x-1 transition-colors ${
+                        isActive ? 'text-blue-600 font-semibold' : 'text-slate-600 hover:text-slate-900'
+                      }`
+                    }
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Examinations</span>
+                  </NavLink>
+                ) : (
+                  <NavLink
+                    to="/examinations/available"
+                    className={({ isActive }) =>
+                      `flex items-center space-x-1 transition-colors ${
+                        isActive ? 'text-blue-600 font-semibold' : 'text-slate-600 hover:text-slate-900'
+                      }`
+                    }
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>Available Exams</span>
+                  </NavLink>
+                )}
+              </>
+            )}
+
+            <div className="h-4 w-px bg-slate-200" aria-hidden="true" />
+
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2 text-xs font-medium text-slate-700">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px]">
+                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-200">
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
-                  <span>{user?.name}</span>
+                  <span className="font-semibold">{user?.name}</span>
+                  <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 uppercase font-bold">
+                    {user?.role}
+                  </span>
                 </div>
 
                 <Button
@@ -140,22 +170,50 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
+
+            {isAuthenticated && (
+              <>
+                <NavLink
+                  to="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Dashboard
+                </NavLink>
+
+                {user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' ? (
+                  <NavLink
+                    to="/examinations"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center space-x-2"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Manage Examinations</span>
+                  </NavLink>
+                ) : (
+                  <NavLink
+                    to="/examinations/available"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center space-x-2"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>Available Examinations</span>
+                  </NavLink>
+                )}
+              </>
+            )}
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex flex-col space-y-2">
             {isAuthenticated ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-3 py-2 text-sm font-semibold text-blue-600"
-                >
-                  Dashboard ({user?.name})
-                </Link>
+              <div className="space-y-2">
+                <div className="px-3 py-1 text-xs text-slate-500 font-medium">
+                  Signed in as <strong className="text-slate-800">{user?.name}</strong> ({user?.role})
+                </div>
                 <Button size="md" variant="secondary" onClick={handleLogout} className="w-full">
                   Sign Out
                 </Button>
-              </>
+              </div>
             ) : (
               <>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
