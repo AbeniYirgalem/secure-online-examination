@@ -1,12 +1,29 @@
 import mongoose from 'mongoose';
 
+let memoryServerInstance = null;
+
 /**
  * Connect to MongoDB database via Mongoose.
- * Gracefully handles connection failures so that the server can still start
- * and respond to health checks when MongoDB is not running locally.
+ * If MONGODB_URI is provided, connects to that URI.
+ * In development/test environments without a live MongoDB daemon,
+ * falls back to an in-memory MongoDB instance to ensure authentication
+ * and security test suites function reliably without external dependencies.
  */
-export const connectDatabase = async () => {
-  const uri = process.env.MONGODB_URI;
+export const connectDatabase = async (customUri = null) => {
+  let uri = customUri || process.env.MONGODB_URI;
+
+  if (!uri && process.env.NODE_ENV !== 'production') {
+    try {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      if (!memoryServerInstance) {
+        memoryServerInstance = await MongoMemoryServer.create();
+      }
+      uri = memoryServerInstance.getUri();
+      console.log(`[Database] In-memory MongoDB instance active at: ${uri}`);
+    } catch (memErr) {
+      console.warn(`[Database] In-memory MongoDB initialization skipped: ${memErr.message}`);
+    }
+  }
 
   if (!uri) {
     console.warn('[Database] MONGODB_URI is not configured. Database connection skipped.');
@@ -19,8 +36,19 @@ export const connectDatabase = async () => {
     return conn;
   } catch (error) {
     console.error(`[Database] MongoDB connection failed: ${error.message}`);
-    // Do not call process.exit(1) to allow standalone server operation and testing
     return null;
+  }
+};
+
+export const disconnectDatabase = async () => {
+  try {
+    await mongoose.disconnect();
+    if (memoryServerInstance) {
+      await memoryServerInstance.stop();
+      memoryServerInstance = null;
+    }
+  } catch (error) {
+    console.error('[Database] Disconnect error:', error.message);
   }
 };
 
@@ -33,4 +61,3 @@ mongoose.connection.on('error', (err) => {
 });
 
 export default connectDatabase;
-

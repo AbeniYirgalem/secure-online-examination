@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShieldCheck, Mail, Lock, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { ShieldCheck, Mail, Lock, Eye, EyeOff, AlertCircle, Info, ArrowRight } from 'lucide-react';
+import useAuth from '../hooks/useAuth';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import Badge from '../components/ui/Badge';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
+import { Card, CardContent, CardFooter } from '../components/ui/Card';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -14,9 +18,11 @@ export default function LoginPage() {
   });
 
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationSuccessMessage, setValidationSuccessMessage] = useState('');
+
+  const from = location.state?.from?.pathname || '/dashboard';
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -25,12 +31,11 @@ export default function LoginPage() {
       [name]: type === 'checkbox' ? checked : value,
     }));
 
-    // Clear error on change
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    if (validationSuccessMessage) {
-      setValidationSuccessMessage('');
+    if (apiError) {
+      setApiError('');
     }
   };
 
@@ -45,33 +50,33 @@ export default function LoginPage() {
 
     if (!formData.password) {
       newErrors.password = 'Password is required to authenticate.';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters.';
     }
 
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
+    setApiError('');
 
+    const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setValidationSuccessMessage('');
       return;
     }
 
-    setErrors({});
     setIsSubmitting(true);
-
-    // Pure UI simulation: Demonstrates form validation & state feedback without backend auth
-    setTimeout(() => {
+    try {
+      await login({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      });
+      navigate(from, { replace: true });
+    } catch (err) {
+      setApiError(err.message || 'Invalid email or password.');
+    } finally {
       setIsSubmitting(false);
-      setValidationSuccessMessage(
-        'Client-side validation passed. (Authentication backend integration will be connected in Step 5).'
-      );
-    }, 600);
+    }
   };
 
   return (
@@ -94,15 +99,15 @@ export default function LoginPage() {
         <div className="flex items-start space-x-2.5 p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 text-blue-800 text-xs">
           <Info className="w-4 h-4 shrink-0 text-blue-600 mt-0.5" />
           <p className="leading-relaxed">
-            Authorized access only. Every sign-in attempt is recorded in tamper-resistant audit logs.
+            Authorized access only. Every authentication event is recorded in tamper-resistant audit logs.
           </p>
         </div>
 
-        {/* Validation Feedback Banner */}
-        {validationSuccessMessage && (
-          <div className="flex items-start space-x-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
-            <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
-            <p className="leading-relaxed">{validationSuccessMessage}</p>
+        {/* API Error Alert */}
+        {apiError && (
+          <div className="flex items-start space-x-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+            <p className="leading-relaxed font-medium">{apiError}</p>
           </div>
         )}
 
@@ -150,7 +155,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
 
-              {/* Remember Me & Help Links */}
+              {/* Remember Me */}
               <div className="flex items-center justify-between text-xs pt-1">
                 <label className="flex items-center space-x-2 cursor-pointer text-slate-700">
                   <input
@@ -162,10 +167,6 @@ export default function LoginPage() {
                   />
                   <span>Remember this device</span>
                 </label>
-
-                <span className="text-slate-400 hover:text-blue-600 cursor-pointer transition">
-                  Forgot password?
-                </span>
               </div>
             </CardContent>
 
@@ -176,13 +177,16 @@ export default function LoginPage() {
                 size="md"
                 isLoading={isSubmitting}
                 className="w-full"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
               >
                 Sign In
               </Button>
 
-              <div className="text-center text-[11px] text-slate-400">
-                <span>By signing in, you agree to the </span>
-                <span className="underline cursor-pointer hover:text-slate-600">Institutional Honor Code</span>
+              <div className="text-center text-xs text-slate-500 pt-1">
+                New student?{' '}
+                <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+                  Create student account
+                </Link>
               </div>
             </CardFooter>
           </form>

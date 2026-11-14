@@ -1,9 +1,11 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { connectDatabase } from './config/database.js';
+import authRoutes from './routes/auth.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -12,10 +14,15 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Ensure JWT_SECRET is set for security
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'soes_dev_jwt_secret_key_change_in_production';
+}
+
 // Security Headers Middleware
 app.use(helmet());
 
-// CORS Configuration - Allows configured client origin and standard local development ports
+// CORS Configuration - Supports configured client origin and local development hosts
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5173',
   'http://localhost:5173',
@@ -36,6 +43,9 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+// Cookie Parser Middleware for HttpOnly JWT transmission
+app.use(cookieParser());
 
 // General Rate Limiting Middleware
 const globalLimiter = rateLimit({
@@ -62,6 +72,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Authentication Routes
+app.use('/api/auth', authRoutes);
+
 // 404 Route Handler
 app.use((req, res) => {
   res.status(404).json({
@@ -73,16 +86,18 @@ app.use((req, res) => {
 // Centralized Global Error Handler
 app.use((err, req, res, next) => {
   console.error('[Global Error Handler]:', err.message || err);
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+  res.status(status).json({
     success: false,
     message: err.message || 'Internal Server Error',
+    ...(err.errors ? { errors: err.errors } : {}),
   });
 });
 
 // Centralized Server Startup Function
 export const startServer = async () => {
   try {
-    // Attempt database connection (graceful, non-fatal if offline)
+    // Attempt database connection
     await connectDatabase();
 
     const server = app.listen(PORT, () => {
@@ -112,4 +127,5 @@ export const startServer = async () => {
 // Execute startup when run directly
 startServer();
 
+export { app };
 export default app;

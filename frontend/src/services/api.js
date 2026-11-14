@@ -21,6 +21,7 @@ const getBaseUrl = () => {
 const api = axios.create({
   baseURL: getBaseUrl(),
   timeout: 10000,
+  withCredentials: true, // Enables cross-origin HttpOnly cookie transmission
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

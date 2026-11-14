@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { ShieldCheck, Menu, X, Lock, LogIn } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { ShieldCheck, Menu, X, Lock, LogIn, LogOut, UserPlus, User } from 'lucide-react';
 import Button from '../ui/Button';
+import Badge from '../components/../ui/Badge';
+import useAuth from '../../hooks/useAuth';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    setMobileMenuOpen(false);
+    navigate('/login', { replace: true });
+  };
 
   const navLinks = [
     { label: 'Home', path: '/' },
@@ -29,7 +39,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
@@ -48,16 +58,51 @@ export default function Navbar() {
 
             <div className="h-4 w-px bg-slate-200" aria-hidden="true" />
 
-            <div className="flex items-center text-xs text-slate-500">
-              <Lock className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-              <span>TLS Enforced</span>
-            </div>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
+                <NavLink
+                  to="/dashboard"
+                  className={({ isActive }) =>
+                    `text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition ${
+                      isActive
+                        ? 'bg-blue-50 border-blue-200 text-blue-700'
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`
+                  }
+                >
+                  Dashboard
+                </NavLink>
 
-            <Link to="/login">
-              <Button size="sm" variant="primary" leftIcon={<LogIn className="w-4 h-4" />}>
-                Sign In
-              </Button>
-            </Link>
+                <div className="flex items-center space-x-2 text-xs font-medium text-slate-700">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px]">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <span>{user?.name}</span>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleLogout}
+                  leftIcon={<LogOut className="w-3.5 h-3.5" />}
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link to="/register">
+                  <Button size="sm" variant="outline" leftIcon={<UserPlus className="w-4 h-4" />}>
+                    Register
+                  </Button>
+                </Link>
+                <Link to="/login">
+                  <Button size="sm" variant="primary" leftIcon={<LogIn className="w-4 h-4" />}>
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+            )}
           </nav>
 
           {/* Mobile Menu Toggle Button */}
@@ -98,11 +143,33 @@ export default function Navbar() {
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex flex-col space-y-2">
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
-              <Button size="md" variant="primary" className="w-full" leftIcon={<LogIn className="w-4 h-4" />}>
-                Sign In to Portal
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2 text-sm font-semibold text-blue-600"
+                >
+                  Dashboard ({user?.name})
+                </Link>
+                <Button size="md" variant="secondary" onClick={handleLogout} className="w-full">
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                  <Button size="md" variant="primary" className="w-full" leftIcon={<LogIn className="w-4 h-4" />}>
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                  <Button size="md" variant="outline" className="w-full" leftIcon={<UserPlus className="w-4 h-4" />}>
+                    Register Student Account
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
