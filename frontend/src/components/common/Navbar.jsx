@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShieldCheck, Menu, X, Lock } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
+import { ShieldCheck, Menu, X, Lock, LogIn } from 'lucide-react';
+import Button from '../ui/Button';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const navLinks = [
+    { label: 'Home', path: '/' },
+    { label: 'About', path: '/about' },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo & Brand */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:bg-blue-700 transition">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/15 group-hover:bg-blue-700 transition">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
@@ -22,25 +28,45 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-600">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-              Platform Active
-            </span>
-            <span className="text-slate-400">|</span>
-            <div className="flex items-center text-slate-500 text-xs">
-              <Lock className="w-3.5 h-3.5 mr-1 text-slate-400" />
-              <span>TLS / AES Enforced</span>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                className={({ isActive }) =>
+                  `transition-colors ${
+                    isActive
+                      ? 'text-blue-600 font-semibold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+
+            <div className="h-4 w-px bg-slate-200" aria-hidden="true" />
+
+            <div className="flex items-center text-xs text-slate-500">
+              <Lock className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+              <span>TLS Enforced</span>
             </div>
+
+            <Link to="/login">
+              <Button size="sm" variant="primary" leftIcon={<LogIn className="w-4 h-4" />}>
+                Sign In
+              </Button>
+            </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Toggle Button */}
           <div className="flex md:hidden">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"
+              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              aria-expanded={mobileMenuOpen}
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -49,13 +75,34 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Navigation Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-4 space-y-3">
-          <div className="text-xs font-medium text-slate-500 pb-1">Secure Online Examination System</div>
-          <div className="flex items-center space-x-2 text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Platform Active & Ready</span>
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-5 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex flex-col space-y-1">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 font-semibold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex flex-col space-y-2">
+            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
+              <Button size="md" variant="primary" className="w-full" leftIcon={<LogIn className="w-4 h-4" />}>
+                Sign In to Portal
+              </Button>
+            </Link>
           </div>
         </div>
       )}
