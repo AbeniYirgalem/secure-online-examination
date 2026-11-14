@@ -15,11 +15,22 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Security Headers Middleware
 app.use(helmet());
 
-// CORS Configuration
-const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+// CORS Configuration - Allows configured client origin and standard local development ports
+const allowedOrigins = [
+  process.env.CLIENT_URL || 'http://localhost:5173',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: (origin, callback) => {
+      // Allow non-browser requests (curl, server-to-server) or matched origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS policy blocked access from origin: ${origin}`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -102,4 +113,3 @@ export const startServer = async () => {
 startServer();
 
 export default app;
-

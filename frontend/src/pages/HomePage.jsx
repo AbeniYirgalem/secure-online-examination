@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck,
@@ -9,15 +9,51 @@ import {
   GraduationCap,
   ArrowRight,
   Server,
-  FileCheck,
   CheckCircle,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Card, CardContent } from '../components/ui/Card';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { checkBackendHealth } from '../services/healthService';
 
 export default function HomePage() {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+  // Live Backend Health State
+  const [healthStatus, setHealthStatus] = useState({
+    loading: true,
+    connected: false,
+    message: 'Connecting to backend API...',
+    timestamp: null,
+  });
+
+  const verifyBackendConnection = async () => {
+    setHealthStatus((prev) => ({ ...prev, loading: true }));
+    const result = await checkBackendHealth();
+
+    if (result.success) {
+      setHealthStatus({
+        loading: false,
+        connected: true,
+        message: result.message,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    } else {
+      setHealthStatus({
+        loading: false,
+        connected: false,
+        message: result.message,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+  };
+
+  useEffect(() => {
+    verifyBackendConnection();
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col">
@@ -178,10 +214,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Gateway Status Banner */}
+      {/* Live Backend Integration Status Banner */}
       <section className="py-8 bg-slate-100/70 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600">
                 <Server className="w-4 h-4" />
@@ -192,9 +228,38 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Design System & Layouts Ready</span>
+            {/* Live Health Status Indicator */}
+            <div className="flex items-center space-x-3">
+              {healthStatus.loading ? (
+                <div className="flex items-center space-x-2 text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200">
+                  <LoadingSpinner size="sm" className="text-blue-600" />
+                  <span>Connecting to API...</span>
+                </div>
+              ) : healthStatus.connected ? (
+                <div className="flex items-center space-x-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Backend: {healthStatus.message}</span>
+                  {healthStatus.timestamp && (
+                    <span className="text-emerald-500 text-[10px]">({healthStatus.timestamp})</span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2 text-xs text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>{healthStatus.message}</span>
+                </div>
+              )}
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={verifyBackendConnection}
+                isLoading={healthStatus.loading}
+                leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                title="Verify backend health check"
+              >
+                Recheck
+              </Button>
             </div>
           </div>
         </div>
